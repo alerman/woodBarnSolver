@@ -1,3 +1,5 @@
+package wordbarn;
+
 import com.google.common.collect.Lists;
 
 import java.awt.*;
