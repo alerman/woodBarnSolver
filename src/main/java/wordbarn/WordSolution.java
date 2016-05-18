@@ -11,7 +11,7 @@ import java.util.List;
 public class WordSolution implements Comparable {
     List<Vertex> vertexList = Lists.newArrayList();
     String word = "";
-    WordSolution nextWord = null;
+    List<WordSolution> otherWords = Lists.newArrayList();
 
     public WordSolution(String word, List<Vertex> vertices)
     {
@@ -33,14 +33,6 @@ public class WordSolution implements Comparable {
 
     public void setWord(String word) {
         this.word = word;
-    }
-
-    public WordSolution getNextWord() {
-        return nextWord;
-    }
-
-    public void setNextWord(WordSolution nextWord) {
-        this.nextWord = nextWord;
     }
 
     public int compareTo(Object o) {

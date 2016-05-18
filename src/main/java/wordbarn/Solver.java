@@ -29,20 +29,20 @@ public class Solver {
             for (int j = 0; j < args.length; j++) {
                 board[i][j] = args[i].charAt(j);
             }
-        List<WordSolution> matching = solver.solvePuzzle(board, new int[]{4, 7, 8, 6});
+        List<WordSolution> matching = solver.solvePuzzle(board, new int[]{7, 7, 3, 5, 3});
         System.out.println(matching.size());
 
         for (WordSolution solution : matching) {
             System.out.print(solution.getWord() + " ");
-            for (Vertex v : solution.getVertexList()) {
-                System.out.print(v.vertexChar);
-                System.out.print("-");
-                System.out.print(v.position.x);
-                System.out.print(",");
-                System.out.print(v.position.y);
-
-                System.out.print("  ");
-            }
+//            for (Vertex v : solution.getVertexList()) {
+//                System.out.print(v.vertexChar);
+//                System.out.print("-");
+//                System.out.print(v.position.x);
+//                System.out.print(",");
+//                System.out.print(v.position.y);
+//
+//                System.out.print("  ");
+//            }
             System.out.println();
         }
     }
@@ -78,6 +78,7 @@ public class Solver {
             for (WordSolution solution : subWordsThatMatch) {
                 if (containsPossibleGraph(cloneArray(boardEdited), solution, remainingLengths, wordsThatMatch)) {
                     result = true;
+
                 }
             }
         }
