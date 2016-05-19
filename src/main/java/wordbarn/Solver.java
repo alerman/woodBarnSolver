@@ -29,11 +29,12 @@ public class Solver {
             for (int j = 0; j < args.length; j++) {
                 board[i][j] = args[i].charAt(j);
             }
-        List<WordSolution> matching = solver.solvePuzzle(board, new int[]{7, 7, 3, 5, 3});
+        List<WordSolution> matching = solver.solvePuzzle(board, new int[]{6,5,7,7});
         System.out.println(matching.size());
-
+        Set<String> seenWords = Sets.newHashSet();
         for (WordSolution solution : matching) {
-            System.out.print(solution.getWord() + " ");
+            if(seenWords.add(solution.getWord())) {
+                System.out.print(solution.getWord() + " ");
 //            for (Vertex v : solution.getVertexList()) {
 //                System.out.print(v.vertexChar);
 //                System.out.print("-");
@@ -43,7 +44,8 @@ public class Solver {
 //
 //                System.out.print("  ");
 //            }
-            System.out.println();
+                System.out.println();
+            }
         }
     }
 
@@ -64,7 +66,7 @@ public class Solver {
 
     private boolean containsPossibleGraph(char[][] boardEdited, WordSolution current, int[] neededLength, List<WordSolution> wordsThatMatch) {
         boolean result = false;
-        if (neededLength.length == 1) {
+        if (neededLength.length == 0) {
             return true;
         }
 
@@ -74,11 +76,13 @@ public class Solver {
         if (subWordsThatMatch.size() == 0) {
             wordsThatMatch.remove(current);
         } else {
-            int[] remainingLengths = Arrays.copyOfRange(neededLength, 1, neededLength.length);
-            for (WordSolution solution : subWordsThatMatch) {
-                if (containsPossibleGraph(cloneArray(boardEdited), solution, remainingLengths, wordsThatMatch)) {
-                    result = true;
+            if(neededLength.length >1) {
+                int[] remainingLengths = Arrays.copyOfRange(neededLength, 1, neededLength.length);
+                for (WordSolution solution : subWordsThatMatch) {
+                    if (containsPossibleGraph(cloneArray(boardEdited), solution, remainingLengths, wordsThatMatch)) {
+                        result = true;
 
+                    }
                 }
             }
         }
@@ -201,7 +205,7 @@ public class Solver {
     private Set<String> loadDictionary(int neededLength, Map<Character, Integer> allChars) {
         Set<String> allWords = Sets.newTreeSet();
         try {
-            BufferedReader br = new BufferedReader(new FileReader("C:\\core-spring-4.2.a.RELEASE\\woodBarnSolver\\src\\main\\resources\\words.txt"));
+            BufferedReader br = new BufferedReader(new FileReader("/Users/alerman/Google Drive/WordGueeser/wordbarnSolver/woodbarnSolver/src/main/resources/words.txt"));
             String line;
             whilepointer:
             while ((line = br.readLine()) != null) {
@@ -276,7 +280,10 @@ public class Solver {
             int absY = Math.abs(yPos - v.position.y);
             if (absX <= 1 && absY <= 1 && !(absY == 0 && absX == 0)) {
                 verticesUsed.add(v);
-                result = findPathFromVertex(v, vertexMap, word.substring(1), verticesUsed);
+                if(findPathFromVertex(v, vertexMap, word.substring(1), verticesUsed))
+                {
+                    result = true;
+                }
 
             }
         }
