@@ -3,6 +3,7 @@ package wordbarn;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.profiler.Profiler;
@@ -11,8 +12,10 @@ import java.awt.*;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.*;
 
 /**
  * Created by Administrator on 5/17/2016.
@@ -21,37 +24,68 @@ public class Solver {
 
     private Logger log = LoggerFactory.getLogger(Solver.class);
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] l) throws IOException, ExecutionException, InterruptedException {
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        System.out.print("Enter board:");
+        String input = br.readLine();
+        String[] boardString = input.split(" ");
+
+        System.out.print("Enter Needed Lengths:");
+        String lengthsString = br.readLine();
+        String[] lengthsSplit = lengthsString.split(" ");
+        int[] neededLengths = new int[lengthsSplit.length];
+        for(int i = 0; i<lengthsSplit.length;i++)
+        {
+            neededLengths[i] = Integer.parseInt(lengthsSplit[i]);
+        }
+
+        System.out.print("Enter Known Words:");
+        String known = br.readLine();
+
         Solver solver = new Solver();
 
-        char[][] board = new char[args.length][args.length];
-        for (int i = 0; i < args.length; i++)
-            for (int j = 0; j < args.length; j++) {
-                board[i][j] = args[i].charAt(j);
+        char[][] board = new char[boardString.length][boardString.length];
+        for (int i = 0; i < boardString.length; i++)
+            for (int j = 0; j < boardString.length; j++) {
+                board[i][j] = boardString[i].charAt(j);
             }
-        List<WordSolution> matching = solver.solvePuzzle(board, new int[]{6,5,7,7});
-        System.out.println(matching.size());
-        Set<String> seenWords = Sets.newHashSet();
-        for (WordSolution solution : matching) {
-            if(seenWords.add(solution.getWord())) {
-                System.out.print(solution.getWord() + " ");
-//            for (Vertex v : solution.getVertexList()) {
-//                System.out.print(v.vertexChar);
-//                System.out.print("-");
-//                System.out.print(v.position.x);
-//                System.out.print(",");
-//                System.out.print(v.position.y);
-//
-//                System.out.print("  ");
-//            }
-                System.out.println();
+        while(true) {
+            List<WordSolution> matching = solver.solvePuzzle(board, neededLengths, known);
+            Map<Integer, WordSolution> menuNumbers = Maps.newHashMap();
+            int i = 1;
+            System.out.println(matching.size());
+            Set<String> seenWords = Sets.newHashSet();
+            for (WordSolution solution : matching) {
+                menuNumbers.put(i, solution);
+                System.out.print(i + ": ");
+                if (seenWords.add(solution.getWord())) {
+                    System.out.print(solution.getWord() + " ");
+                    for (Vertex v : solution.getVertexList()) {
+                        System.out.print(v.vertexChar);
+                        System.out.print("-");
+                        System.out.print(v.position.x);
+                        System.out.print(",");
+                        System.out.print(v.position.y);
+
+                        System.out.print("  ");
+                    }
+                    System.out.println();
+                }
+
+                i++;
             }
+
+            int wordUsed = Integer.parseInt(br.readLine());
+            WordSolution solution = menuNumbers.get(wordUsed);
+            board = solver.removeVerticesFromBoard(board, solution, board.length);
+            neededLengths = Arrays.copyOfRange(neededLengths,1,neededLengths.length);
         }
     }
 
-    private List<WordSolution> solvePuzzle(char[][] board, int[] neededLength) throws IOException {
+    private List<WordSolution> solvePuzzle(char[][] board, int[] neededLength, String knownWord) throws IOException, ExecutionException, InterruptedException {
 
-        List<WordSolution> wordsThatMatch = solveSingleWord(board, neededLength[0]);
+        List<WordSolution> wordsThatMatch = solveSingleWord(board, neededLength[0], knownWord);
         List<WordSolution> wordSolutionList = Lists.newArrayList(wordsThatMatch);
 
         for (int i = 0; i < wordSolutionList.size(); i++) {
@@ -64,15 +98,15 @@ public class Solver {
         return wordsThatMatch;
     }
 
-    private boolean containsPossibleGraph(char[][] boardEdited, WordSolution current, int[] neededLength, List<WordSolution> wordsThatMatch) {
+    private boolean containsPossibleGraph(char[][] boardEdited, WordSolution current, int[] neededLength, List<WordSolution> wordsThatMatch) throws ExecutionException, InterruptedException {
         boolean result = false;
-        if (neededLength.length == 0) {
+        if (neededLength.length <= 1) {
             return true;
         }
 
         boardEdited = removeVerticesFromBoard(boardEdited, current, neededLength[0]);
 
-        List<WordSolution> subWordsThatMatch = solveSingleWord(boardEdited, neededLength[0]);
+        List<WordSolution> subWordsThatMatch = solveSingleWord(boardEdited, neededLength[0], null);
         if (subWordsThatMatch.size() == 0) {
             wordsThatMatch.remove(current);
         } else {
@@ -131,7 +165,7 @@ public class Solver {
         }
     }
 
-    private List<WordSolution> solveSingleWord(char[][] board, int neededLength) {
+    private List<WordSolution> solveSingleWord(char[][] board, int neededLength, String knownWord) throws ExecutionException, InterruptedException {
         Profiler profiler = new Profiler(getClass().getName());
         profiler.setLogger(log);
 
@@ -144,7 +178,10 @@ public class Solver {
         profiler.start("Create possible word list");
 
         Set<String> allWords = loadDictionary(neededLength, allChars);
-
+        if(StringUtils.isNoneBlank(knownWord))
+        {
+            allWords = Sets.newHashSet(knownWord);
+        }
         profiler.stop();
         profiler.log();
 
@@ -153,8 +190,30 @@ public class Solver {
         return solveWord(allWords, vertexMap);
     }
 
-    private List<WordSolution> solveWord(Set<String> allWords, Map<Character, List<Vertex>> vertexMap) {
+    private static final ExecutorService workers = Executors.newCachedThreadPool();
+    private List<WordSolution> solveWord(Set<String> allWords, final Map<Character, List<Vertex>> vertexMap) throws InterruptedException, ExecutionException {
 
+        List<WordSolution> result = Lists.newArrayList();
+        Collection<Callable<List<WordSolution>>> solutionFinders = new ArrayList<Callable<List<WordSolution>>>();
+        List<List<String>> partitionedWords = Lists.partition(Lists.newArrayList(allWords), 50);
+        for(final List<String> words : partitionedWords)
+        {
+            solutionFinders.add(new Callable<List<WordSolution>>() {
+                public List<WordSolution> call() throws Exception {
+                    return solveOneWord(words,vertexMap);
+                }
+            });
+        }
+
+        List<Future<List<WordSolution>>> results = workers.invokeAll(solutionFinders, 10, TimeUnit.MINUTES);
+        for (Future<List<WordSolution>> f : results) {
+            List<WordSolution> solutions = f.get();
+            result.addAll(solutions);
+        }
+        return result;
+    }
+
+    private List<WordSolution> solveOneWord(Collection<String> allWords, Map<Character, List<Vertex>> vertexMap) {
         List<WordSolution> wordsThatMatch = Lists.newArrayList();
         for (String word : allWords) {
             //split by char
