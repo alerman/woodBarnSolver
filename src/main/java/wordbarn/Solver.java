@@ -55,11 +55,12 @@ public class Solver {
             Map<Integer, WordSolution> menuNumbers = Maps.newHashMap();
             int i = 1;
             System.out.println(matching.size());
-            Set<String> seenWords = Sets.newHashSet();
+//            Set<String> seenWords = Sets.newHashSet();
             for (WordSolution solution : matching) {
                 menuNumbers.put(i, solution);
-                System.out.print(i + ": ");
-                if (seenWords.add(solution.getWord())) {
+//                if (seenWords.add(solution.getWord())) {
+
+                    System.out.print(i + ": ");
                     System.out.print(solution.getWord() + " ");
                     for (Vertex v : solution.getVertexList()) {
                         System.out.print(v.vertexChar);
@@ -71,14 +72,18 @@ public class Solver {
                         System.out.print("  ");
                     }
                     System.out.println();
+                i++;
                 }
 
-                i++;
-            }
+//                i++;
+//            }
 
             int wordUsed = Integer.parseInt(br.readLine());
             WordSolution solution = menuNumbers.get(wordUsed);
             board = solver.removeVerticesFromBoard(board, solution, board.length);
+
+            System.out.print("Enter Known Words:");
+            known = br.readLine();
             neededLengths = Arrays.copyOfRange(neededLengths,1,neededLengths.length);
         }
     }
@@ -166,24 +171,24 @@ public class Solver {
     }
 
     private List<WordSolution> solveSingleWord(char[][] board, int neededLength, String knownWord) throws ExecutionException, InterruptedException {
-        Profiler profiler = new Profiler(getClass().getName());
-        profiler.setLogger(log);
+        //Profiler profiler = new Profiler(getClass().getName());
+        //profiler.setLogger(log);
 
 
-        profiler.start("Determine possible letters");
+        //profiler.start("Determine possible letters");
         Map<Character, Integer> allChars = getAllowedCharacters(board);
         log.debug("Possible Letters: " + allChars);
 
 
-        profiler.start("Create possible word list");
+       // profiler.start("Create possible word list");
 
         Set<String> allWords = loadDictionary(neededLength, allChars);
         if(StringUtils.isNoneBlank(knownWord))
         {
             allWords = Sets.newHashSet(knownWord);
         }
-        profiler.stop();
-        profiler.log();
+        //profiler.stop();
+        //profiler.log();
 
         Map<Character, List<Vertex>> vertexMap = createGraph(board);
 
