@@ -269,7 +269,7 @@ public class Solver {
     private Set<String> loadDictionary(int neededLength, Map<Character, Integer> allChars) {
         Set<String> allWords = Sets.newTreeSet();
         try {
-            BufferedReader br = new BufferedReader(new FileReader("/Users/alerman/Google Drive/WordGueeser/wordbarnSolver/woodbarnSolver/src/main/resources/words.txt"));
+            BufferedReader br = new BufferedReader(new FileReader("/Users/alerman/Google Drive/WordGueeser/wordbarnSolver/woodbarnSolver/src/main/resources/words.txt1"));
             String line;
             whilepointer:
             while ((line = br.readLine()) != null) {
